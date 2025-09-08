@@ -5,3 +5,7 @@ draft: false
 ---
 
 我是 **wangbm**，一个没有方向的程序员。
+
+---
+
+email - hiwangbingmo@gmail.com
