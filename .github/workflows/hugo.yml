@@ -1,0 +1,47 @@
+name: Deploy Hugo to GitHub Pages
+
+on:
+  push:
+    branches: [ "master" ]  # 源码分支（如 main/master）
+  workflow_dispatch:  # 允许手动触发
+
+# 权限设置（必须）
+permissions:
+  contents: read        # 读取源码
+  pages: write          # 写入 Pages 内容
+  id-token: write       # 身份验证
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4  # 最新版
+        with:
+          submodules: recursive  # 拉取主题子模块（如有）
+          fetch-depth: 0         # 获取完整提交历史（用于 Hugo 生成最后修改时间等）
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2  # 维护活跃的 Hugo 安装动作
+        with:
+          hugo-version: "latest"      # 使用最新版 Hugo
+          extended: true              # 必须启用，支持 Sass/SCSS 主题
+
+      - name: Build Hugo site
+        run: hugo --minify  # 构建静态文件到 public/ 目录，--minify 压缩输出
+
+      - name: Upload Pages artifact  # 关键步骤：使用 Pages 专用上传动作
+        uses: actions/upload-pages-artifact@v3  # 官方 Pages 上传动作，当前最新版为 v3
+        with:
+          path: "./public"  # Hugo 构建输出目录
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:  # 必须配置，用于 Pages 访问控制
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4  # 官方部署动作，当前最新版为 v4
+        id: deployment
